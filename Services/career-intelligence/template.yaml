@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: NexusOps X Career Intelligence Service
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 256
+
+Resources:
+  CareerIntelligenceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexusops-career-intelligence
+      Handler: src/handler.handler
+      CodeUri: .
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - ComprehendReadOnly
+      Events:
+        CareerIntelligenceApi:
+          Type: Api
+          Properties:
+            Path: /career/analyze
+            Method: post

@@ -1,0 +1,13 @@
+{
+  "name": "threat-sentinel",
+  "version": "1.0.0",
+  "main": "src/handler.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@aws-sdk/client-eventbridge": "^3.0.0"
+  }
+}

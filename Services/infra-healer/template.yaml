@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  InfraHealerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexus-infra-healer
+      Runtime: nodejs18.x
+      Handler: src/handler.handler
+      CodeUri: .
+      Timeout: 15
+
+      Environment:
+        Variables:
+          PLAYBOOK_TABLE_NAME: NexusRemediationPlaybook
+          EVENT_BUS_NAME: default
+
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: NexusRemediationPlaybook
+
+        - EventBridgePutEventsPolicy:
+            EventBusName: default
+
+      Events:
+        HealerApi:
+          Type: Api
+          Properties:
+            Path: /healer
+            Method: post

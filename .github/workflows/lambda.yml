@@ -1,0 +1,51 @@
+name: NexusOps Lambda Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-lambdas:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    strategy:
+      matrix:
+        service:
+          - auth-nexus
+          - threat-sentinel
+          - infra-healer
+          - event-intelligence
+          - topology-intelligence
+          - data-nexus
+          - cicd-intelligence
+          - career-intelligence
+          - engineering-inelligence
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-north-1
+
+      - name: Build SAM Application
+        working-directory: services/${{ matrix.service }}
+        run: sam build
+
+      - name: Deploy SAM Application
+        working-directory: services/${{ matrix.service }}
+        run: |
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset

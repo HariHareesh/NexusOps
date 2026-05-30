@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  ThreatSentinelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexus-threat-sentinel
+      Runtime: nodejs18.x
+      Handler: src/handler.handler
+      CodeUri: .
+      Timeout: 15
+      Environment:
+        Variables:
+          CVE_TABLE_NAME: NexusCVERegistry
+          EVENT_BUS_NAME: default
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: NexusCVERegistry
+        - EventBridgePutEventsPolicy:
+            EventBusName: default
+      Events:
+        ThreatApi:
+          Type: Api
+          Properties:
+            Path: /threats
+            Method: post

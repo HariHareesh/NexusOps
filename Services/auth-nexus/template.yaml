@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NexusOps X Auth Nexus Lambda
+
+Resources:
+  AuthNexusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexusops-auth-nexus
+      Runtime: nodejs20.x
+      Handler: src/handler.handler
+      CodeUri: .
+      Role: arn:aws:iam::093796421952:role/nexus-lambda-role
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: nexus-event-busc
+          COGNITO_CLIENT_ID: 3oiahmokqj0872blfcu39os7cj

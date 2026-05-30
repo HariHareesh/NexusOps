@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  CicdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexus-cicd-intelligence
+      Handler: src/handler.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cloudwatch:GetMetricData
+                - cloudwatch:ListMetrics
+                - events:PutEvents
+              Resource: "*"
+
+      Events:
+        CicdApi:
+          Type: Api
+          Properties:
+            Path: /cicd
+            Method: get

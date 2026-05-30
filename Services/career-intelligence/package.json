@@ -1,0 +1,16 @@
+{
+  "name": "career-intelligence",
+  "version": "1.0.0",
+  "main": "src/handler.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node src/handler.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-comprehend": "^3.600.0",
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0",
+    "@aws-sdk/client-s3": "^3.600.0",
+    "@aws-sdk/client-eventbridge": "^3.600.0"
+  }
+}

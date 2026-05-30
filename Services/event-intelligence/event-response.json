@@ -1,0 +1,1 @@
+{"statusCode":200,"headers":{"Content-Type":"application/json"},"body":"{\"success\":true,\"analyzedEvent\":{\"eventId\":\"d74f6b1d-24be-4347-9342-0baf04eded8e\",\"eventType\":\"SERVICE_DOWN\",\"severity\":\"CRITICAL\",\"sourceService\":\"manual-test\",\"payload\":{\"resource\":\"api-gateway\"},\"timestamp\":\"2026-05-16T17:53:49.882Z\"}}"}

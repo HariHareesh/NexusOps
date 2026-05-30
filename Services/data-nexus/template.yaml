@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  DataNexusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexus-data-nexus
+      Handler: src/handler.handler
+      Runtime: nodejs18.x
+      Timeout: 30
+
+      Environment:
+        Variables:
+          ATHENA_RESULTS_BUCKET: nexusopsx-athena-results
+
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:ListTables
+                - dynamodb:DescribeTable
+                - dynamodb:Scan
+                - athena:StartQueryExecution
+                - athena:GetQueryExecution
+                - athena:GetQueryResults
+                - s3:GetObject
+                - s3:PutObject
+                - s3:ListBucket
+                - events:PutEvents
+              Resource: "*"
+
+      Events:
+        DataNexusApi:
+          Type: Api
+          Properties:
+            Path: /datanexus
+            Method: post

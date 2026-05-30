@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: NexusOps X Engineering Intelligence Service
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 256
+
+Resources:
+  EngineeringIntelligenceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nexusops-engineering-intelligence
+      Handler: src/handler.handler
+      CodeUri: .
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        EngineeringIntelligenceApi:
+          Type: Api
+          Properties:
+            Path: /engineering/analyze
+            Method: post
