@@ -17,7 +17,7 @@ jobs:
       matrix:
         service:
           - auth-nexus
-          - threate sentil
+          - threat-sentinel
           - infra-healer
           - event-intelligence
           - topology-intelligence
