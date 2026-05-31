@@ -40,11 +40,11 @@ jobs:
           aws-region: eu-north-1
 
       - name: Build SAM Application
-        working-directory: services/${{ matrix.service }}
+        working-directory: Services/${{ matrix.service }}
         run: sam build
 
       - name: Deploy SAM Application
-        working-directory: services/${{ matrix.service }}
+        working-directory: Services/${{ matrix.service }}
         run: |
           sam deploy \
             --no-confirm-changeset \
