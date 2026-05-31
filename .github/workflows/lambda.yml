@@ -17,7 +17,7 @@ jobs:
       matrix:
         service:
           - auth-nexus
-          - threat-sentinel
+          - threate sentil
           - infra-healer
           - event-intelligence
           - topology-intelligence
@@ -37,7 +37,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: eu-north-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Build SAM Application
         working-directory: Services/${{ matrix.service }}
