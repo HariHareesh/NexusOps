@@ -24,7 +24,7 @@ jobs:
           - data-nexus
           - cicd-intelligence
           - career-intelligence
-          - engineering-inelligence
+          - engineering-intelligence
 
     steps:
       - name: Checkout Repository
