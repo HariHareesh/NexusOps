@@ -43,11 +43,12 @@ jobs:
         working-directory: Services/${{ matrix.service }}
         run: sam build
 
-            - name: Deploy SAM Application
+                  - name: Deploy SAM Application
         working-directory: Services/${{ matrix.service }}
         run: |
           sam deploy \
-            --stack-name ${{ matrix.service }}-stack \
+            --stack-name nexusops-${{ matrix.service }} \
             --capabilities CAPABILITY_IAM \
+            --region eu-north-1 \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset
