@@ -14,6 +14,7 @@ jobs:
       contents: read
 
     strategy:
+      fail-fast: false
       matrix:
         service:
           - auth-nexus
@@ -43,12 +44,7 @@ jobs:
         working-directory: Services/${{ matrix.service }}
         run: sam build
 
-                  - name: Deploy SAM Application
+      - name: Deploy SAM Application
         working-directory: Services/${{ matrix.service }}
         run: |
-          sam deploy \
-            --stack-name nexusops-${{ matrix.service }} \
-            --capabilities CAPABILITY_IAM \
-            --region eu-north-1 \
-            --no-confirm-changeset \
-            --no-fail-on-empty-changeset
+          sam deploy --stack-name nexusops-${{ matrix.service }} --capabilities CAPABILITY_IAM --region eu-north-1 --no-confirm-changeset --no-fail-on-empty-changeset
