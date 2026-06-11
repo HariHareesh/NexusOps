@@ -6,7 +6,6 @@ Resources:
   AuthNexusFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nexusops-auth-nexus
       Runtime: nodejs20.x
       Handler: src/handler.handler
       CodeUri: .
@@ -15,5 +14,5 @@ Resources:
       MemorySize: 256
       Environment:
         Variables:
-          EVENT_BUS_NAME: nexus-event-busc
+          EVENT_BUS_NAME: nexus-event-bus
           COGNITO_CLIENT_ID: 3oiahmokqj0872blfcu39os7cj
