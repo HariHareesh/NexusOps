@@ -5,7 +5,6 @@ Resources:
   InfraHealerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nexus-infra-healer
       Runtime: nodejs20.x
       Handler: src/handler.handler
       CodeUri: .
