@@ -7,7 +7,7 @@ Resources:
     Properties:
       FunctionName: nexus-cicd-intelligence
       Handler: src/handler.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Timeout: 30
 
       Policies:

@@ -6,7 +6,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: nexus-infra-healer
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Handler: src/handler.handler
       CodeUri: .
       Timeout: 15

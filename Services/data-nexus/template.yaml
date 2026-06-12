@@ -5,9 +5,8 @@ Resources:
   DataNexusFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nexus-data-nexus
       Handler: src/handler.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Timeout: 30
 
       Environment:
