@@ -6,7 +6,6 @@ Resources:
   EventIntelligenceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nexusops-event-intelligence
       Runtime: nodejs20.x
       Handler: src/handler.handler
       CodeUri: .
