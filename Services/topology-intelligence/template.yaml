@@ -5,7 +5,6 @@ Resources:
   TopologyFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nexus-topology-intelligence
       Handler: src/handler.handler
       Runtime: nodejs20.x
       Timeout: 30
