@@ -12,7 +12,6 @@ Resources:
   CareerIntelligenceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nexusops-career-intelligence
       Handler: src/handler.handler
       CodeUri: .
       Policies:
