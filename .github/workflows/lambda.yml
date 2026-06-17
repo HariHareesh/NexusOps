@@ -21,9 +21,7 @@ jobs:
           - threat-sentinel
           - infra-healer
           - event-intelligence
-          - topology-intelligence
           - data-nexus
-          - cicd-intelligence
           - career-intelligence
           - engineering-intelligence
 
