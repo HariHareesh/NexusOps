@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.post("/analyze", async (req, res) => {
   try {
-    const { handler } = require("../../../services/engineering-inelligence/src/handler");
+    const { handler } = require("../../../services/engineering-intelligence/src/handler");
 
     const result = await handler({
       body: JSON.stringify(req.body || {}),
