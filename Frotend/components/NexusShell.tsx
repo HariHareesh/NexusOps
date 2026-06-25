@@ -14,6 +14,7 @@ const navItems = [
   { label: "Data Nexus", href: "/dashboard/datanexus", meta: "Telemetry" },
   { label: "CI/CD", href: "/dashboard/cicd", meta: "Deploy" },
   { label: "Career", href: "/dashboard/career", meta: "Growth" },
+  { label: "Monitoring", href: "/dashboard/monitoring", meta: "Health" },
 ];
 
 export default function NexusShell({ children }: { children: ReactNode }) {
