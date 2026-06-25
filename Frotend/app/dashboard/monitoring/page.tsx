@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import NexusShell from "../../../components/NexusShell";
 
 type HealthService = {
@@ -10,51 +10,69 @@ type HealthService = {
   latency: number;
 };
 
-export default function MonitoringPage() {
-  const [services, setServices] = useState<HealthService[]>([
-    { name: "Backend", endpoint: "/health", status: "Checking", latency: 0 },
-    { name: "Auth", endpoint: "/api/auth/health", status: "Checking", latency: 0 },
-    { name: "Events", endpoint: "/api/events/health", status: "Checking", latency: 0 },
-    { name: "Threat Sentinel", endpoint: "/api/threats/health", status: "Checking", latency: 0 },
-    { name: "Infra Healer", endpoint: "/api/healer/health", status: "Checking", latency: 0 },
-    { name: "Topology", endpoint: "/api/topology/health", status: "Checking", latency: 0 },
-    { name: "CI/CD", endpoint: "/api/cicd/health", status: "Checking", latency: 0 },
-    { name: "Data Nexus", endpoint: "/api/datanexus/health", status: "Checking", latency: 0 },
-  ]);
+const initialServices: HealthService[] = [
+  { name: "Backend", endpoint: "/health", status: "Checking", latency: 0 },
+  { name: "Auth", endpoint: "/api/auth/health", status: "Checking", latency: 0 },
+  { name: "Events", endpoint: "/api/events/health", status: "Checking", latency: 0 },
+  { name: "Threat Sentinel", endpoint: "/api/threats/health", status: "Checking", latency: 0 },
+  { name: "Infra Healer", endpoint: "/api/healer/health", status: "Checking", latency: 0 },
+  { name: "Topology", endpoint: "/api/topology/health", status: "Checking", latency: 0 },
+  { name: "CI/CD", endpoint: "/api/cicd/health", status: "Checking", latency: 0 },
+  { name: "Data Nexus", endpoint: "/api/datanexus/health", status: "Checking", latency: 0 },
+];
 
+export default function MonitoringPage() {
+  const [services, setServices] = useState<HealthService[]>(initialServices);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
+
+  const checkServices = useCallback(async () => {
+    setIsChecking(true);
+
+    setServices((current) =>
+      current.map((service) => ({
+        ...service,
+        status: "Checking",
+      }))
+    );
+
+    const updated = await Promise.all(
+      initialServices.map(async (service) => {
+        const start = performance.now();
+
+        try {
+          const res = await fetch(`http://localhost:5000${service.endpoint}`);
+          const latency = Math.max(1, Math.round(performance.now() - start));
+
+          return {
+            ...service,
+            status: res.ok ? ("Healthy" as const) : ("Offline" as const),
+            latency,
+          };
+        } catch {
+          return {
+            ...service,
+            status: "Offline" as const,
+            latency: 0,
+          };
+        }
+      })
+    );
+
+    setServices(updated);
+    setLastUpdated(new Date().toLocaleTimeString());
+    setIsChecking(false);
+  }, []);
 
   useEffect(() => {
-    async function checkServices() {
-      const updated = await Promise.all(
-        services.map(async (service) => {
-          const start = performance.now();
-
-          try {
-            const res = await fetch(`http://localhost:5000${service.endpoint}`);
-            const latency = Math.max(1, Math.round(performance.now() - start));
-
-            return {
-              ...service,
-              status: res.ok ? "Healthy" as const : "Offline" as const,
-              latency,
-            };
-          } catch {
-            return {
-              ...service,
-              status: "Offline" as const,
-              latency: 0,
-            };
-          }
-        })
-      );
-
-      setServices(updated);
-      setLastUpdated(new Date().toLocaleTimeString());
-    }
-
     checkServices();
-  }, []);
+
+    const interval = setInterval(() => {
+      checkServices();
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, [checkServices]);
 
   const healthyServices = services.filter((s) => s.status === "Healthy").length;
   const totalServices = services.length;
@@ -69,11 +87,23 @@ export default function MonitoringPage() {
     <NexusShell>
       <div className="nx-header">
         <div>
-          <p className="nx-kicker">PHASE 8.2</p>
+          <p className="nx-kicker">PHASE 8.3</p>
           <h2 className="nx-heading">Live Monitoring Dashboard</h2>
           <p className="nx-muted">
-            Live health status, response time, and availability of NexusOps services.
+            Auto-refreshing health, response time, and availability signals across NexusOps services.
           </p>
+          <p className="nx-muted" style={{ marginTop: "8px" }}>
+            Auto Refresh: Every 15 seconds · {isChecking ? "Checking services..." : "Monitoring active"}
+          </p>
+        </div>
+
+        <div className="nx-header-actions">
+          <button className="nx-pill success" onClick={checkServices}>
+            Refresh Now
+          </button>
+          <div className="nx-pill neutral">
+            {isChecking ? "Checking..." : "Live"}
+          </div>
         </div>
       </div>
 
