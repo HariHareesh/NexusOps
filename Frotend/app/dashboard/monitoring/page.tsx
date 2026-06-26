@@ -19,10 +19,12 @@ type HealthService = {
 };
 
 type HistoryItem = {
+  id: string;
   time: string;
   service: string;
   status: string;
   latency: number;
+  event: "Healthy" | "Warning" | "Critical";
 };
 
 const initialServices: HealthService[] = [
@@ -83,10 +85,17 @@ export default function MonitoringPage() {
     setHistory((previous) =>
       [
         ...updated.map((service) => ({
+          id: crypto.randomUUID(),
           time: currentTime,
           service: service.name,
           status: service.status,
           latency: service.latency,
+          event:
+            service.status === "Offline"
+              ? ("Critical" as const)
+              : service.latency > 500
+              ? ("Warning" as const)
+              : ("Healthy" as const),
         })),
         ...previous,
       ].slice(0, 50)
@@ -141,10 +150,11 @@ export default function MonitoringPage() {
     <NexusShell>
       <div className="nx-header">
         <div>
-          <p className="nx-kicker">PHASE 8.6</p>
+          <p className="nx-kicker">PHASE 8.7</p>
           <h2 className="nx-heading">Live Monitoring Dashboard</h2>
           <p className="nx-muted">
-            Auto-refreshing health, response time, alerts, and monitoring history across NexusOps services.
+            Auto-refreshing health, response time, alerts, charts, and live event
+            timeline across NexusOps services.
           </p>
           <p className="nx-muted" style={{ marginTop: "8px" }}>
             Auto Refresh: Every 15 seconds ·{" "}
@@ -280,9 +290,7 @@ export default function MonitoringPage() {
           <div className="nx-panel-head">
             <div>
               <h2>Health Status Summary</h2>
-              <p className="nx-muted">
-                Healthy versus offline service count.
-              </p>
+              <p className="nx-muted">Healthy versus offline service count.</p>
             </div>
           </div>
 
@@ -302,9 +310,9 @@ export default function MonitoringPage() {
       <section className="nx-panel" style={{ marginTop: "24px" }}>
         <div className="nx-panel-head">
           <div>
-            <h2>Monitoring History</h2>
+            <h2>Live Event Timeline</h2>
             <p className="nx-muted">
-              Recent health check activity across NexusOps services.
+              Recent health check activity across NexusOps services with severity labels.
             </p>
           </div>
 
@@ -326,16 +334,23 @@ export default function MonitoringPage() {
             </article>
           )}
 
-          {history.map((item, index) => (
+          {history.map((item) => (
             <article
+              key={item.id}
               className={`nx-event ${
-                item.status === "Offline" ? "danger" : "live"
+                item.event === "Critical"
+                  ? "danger"
+                  : item.event === "Warning"
+                  ? "warning"
+                  : "live"
               }`}
-              key={`${item.service}-${item.time}-${index}`}
             >
               <div className="nx-event-top">
                 <div>
-                  <strong>{item.service}</strong>
+                  <strong>
+                    {item.event.toUpperCase()} • {item.service}
+                  </strong>
+
                   <p className="nx-muted">
                     {item.status} • {item.latency} ms
                   </p>
