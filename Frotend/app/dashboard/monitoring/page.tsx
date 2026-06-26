@@ -41,6 +41,7 @@ const initialServices: HealthService[] = [
 export default function MonitoringPage() {
   const [services, setServices] = useState<HealthService[]>(initialServices);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [uptime, setUptime] = useState<Record<string, number>>({});
   const [lastUpdated, setLastUpdated] = useState("");
   const [isChecking, setIsChecking] = useState(false);
 
@@ -100,6 +101,14 @@ export default function MonitoringPage() {
         ...previous,
       ].slice(0, 50)
     );
+    const uptimeData: Record<string, number> = {};
+
+updated.forEach((service) => {
+  uptimeData[service.name] =
+    service.status === "Healthy" ? 100 : 0;
+});
+
+setUptime(uptimeData);
 
     setIsChecking(false);
   }, []);
@@ -171,6 +180,36 @@ export default function MonitoringPage() {
           </div>
         </div>
       </div>
+      <section className="nx-panel" style={{ marginTop: "24px" }}>
+  <div className="nx-panel-head">
+    <div>
+      <h2>Service Uptime</h2>
+      <p className="nx-muted">
+        Current uptime percentage based on the latest monitoring cycle.
+      </p>
+    </div>
+  </div>
+
+  <div className="nx-grid">
+    {Object.entries(uptime).map(([service, value]) => (
+      <div className="nx-card" key={service}>
+        <h3>{service}</h3>
+
+        <h2
+          style={{
+            color: value === 100 ? "#22c55e" : "#ef4444",
+          }}
+        >
+          {value.toFixed(1)}%
+        </h2>
+
+        <p className="nx-muted">
+          {value === 100 ? "Operational" : "Unavailable"}
+        </p>
+      </div>
+    ))}
+  </div>
+</section>
 
       <section className="nx-grid">
         <div className="nx-card">
