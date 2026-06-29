@@ -182,6 +182,41 @@ export default function MonitoringPage() {
     { name: "Healthy", value: healthyServices },
     { name: "Offline", value: offlineServices.length },
   ];
+  const copyMonitoringReport = async () => {
+  const report = `
+NexusOps Monitoring Report
+
+Overall Health: ${overallHealth}%
+Healthy Services: ${healthyServices}/${totalServices}
+Average Response Time: ${averageLatency} ms
+Last Updated: ${lastUpdated || "Not checked yet"}
+Incidents: ${incidents.length}
+
+Service Status:
+${services
+  .map(
+    (service) =>
+      `- ${service.name}: ${service.status}, ${service.latency} ms`
+  )
+  .join("\n")}
+
+Recent Incidents:
+${
+  incidents.length === 0
+    ? "No incidents detected"
+    : incidents
+        .slice(0, 5)
+        .map(
+          (incident) =>
+            `- ${incident.time} ${incident.type}: ${incident.service} - ${incident.message}`
+        )
+        .join("\n")
+}
+`.trim();
+
+  await navigator.clipboard.writeText(report);
+  alert("Monitoring report copied to clipboard");
+};
 
   return (
     <NexusShell>
@@ -203,6 +238,9 @@ export default function MonitoringPage() {
           <button className="nx-pill success" onClick={checkServices}>
             Refresh Now
           </button>
+          <button className="nx-pill neutral" onClick={copyMonitoringReport}>
+  Copy Report
+</button>
           <div className="nx-pill neutral">
             {isChecking ? "Checking..." : "Live"}
           </div>
