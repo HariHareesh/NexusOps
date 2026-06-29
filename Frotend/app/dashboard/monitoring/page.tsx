@@ -27,6 +27,15 @@ type HistoryItem = {
   event: "Healthy" | "Warning" | "Critical";
 };
 
+type IncidentItem = {
+  id: string;
+  time: string;
+  service: string;
+  type: "Warning" | "Critical" | "Recovered";
+  message: string;
+  latency: number;
+};
+
 const initialServices: HealthService[] = [
   { name: "Backend", endpoint: "/health", status: "Checking", latency: 0 },
   { name: "Auth", endpoint: "/api/auth/health", status: "Checking", latency: 0 },
@@ -41,6 +50,7 @@ const initialServices: HealthService[] = [
 export default function MonitoringPage() {
   const [services, setServices] = useState<HealthService[]>(initialServices);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [incidents, setIncidents] = useState<IncidentItem[]>([]);
   const [uptime, setUptime] = useState<Record<string, number>>({});
   const [lastUpdated, setLastUpdated] = useState("");
   const [isChecking, setIsChecking] = useState(false);
@@ -101,15 +111,33 @@ export default function MonitoringPage() {
         ...previous,
       ].slice(0, 50)
     );
+
+    const newIncidents = updated
+      .filter((service) => service.status === "Offline" || service.latency > 500)
+      .map((service) => ({
+        id: crypto.randomUUID(),
+        time: currentTime,
+        service: service.name,
+        type:
+          service.status === "Offline"
+            ? ("Critical" as const)
+            : ("Warning" as const),
+        message:
+          service.status === "Offline"
+            ? `${service.name} is offline`
+            : `${service.name} high latency detected`,
+        latency: service.latency,
+      }));
+
+    setIncidents((previous) => [...newIncidents, ...previous].slice(0, 30));
+
     const uptimeData: Record<string, number> = {};
 
-updated.forEach((service) => {
-  uptimeData[service.name] =
-    service.status === "Healthy" ? 100 : 0;
-});
+    updated.forEach((service) => {
+      uptimeData[service.name] = service.status === "Healthy" ? 100 : 0;
+    });
 
-setUptime(uptimeData);
-
+    setUptime(uptimeData);
     setIsChecking(false);
   }, []);
 
@@ -159,11 +187,11 @@ setUptime(uptimeData);
     <NexusShell>
       <div className="nx-header">
         <div>
-          <p className="nx-kicker">PHASE 8.7</p>
+          <p className="nx-kicker">PHASE 8.9</p>
           <h2 className="nx-heading">Live Monitoring Dashboard</h2>
           <p className="nx-muted">
-            Auto-refreshing health, response time, alerts, charts, and live event
-            timeline across NexusOps services.
+            Auto-refreshing health, uptime, alerts, incidents, charts, and live
+            event timeline across NexusOps services.
           </p>
           <p className="nx-muted" style={{ marginTop: "8px" }}>
             Auto Refresh: Every 15 seconds ·{" "}
@@ -180,36 +208,6 @@ setUptime(uptimeData);
           </div>
         </div>
       </div>
-      <section className="nx-panel" style={{ marginTop: "24px" }}>
-  <div className="nx-panel-head">
-    <div>
-      <h2>Service Uptime</h2>
-      <p className="nx-muted">
-        Current uptime percentage based on the latest monitoring cycle.
-      </p>
-    </div>
-  </div>
-
-  <div className="nx-grid">
-    {Object.entries(uptime).map(([service, value]) => (
-      <div className="nx-card" key={service}>
-        <h3>{service}</h3>
-
-        <h2
-          style={{
-            color: value === 100 ? "#22c55e" : "#ef4444",
-          }}
-        >
-          {value.toFixed(1)}%
-        </h2>
-
-        <p className="nx-muted">
-          {value === 100 ? "Operational" : "Unavailable"}
-        </p>
-      </div>
-    ))}
-  </div>
-</section>
 
       <section className="nx-grid">
         <div className="nx-card">
@@ -230,6 +228,13 @@ setUptime(uptimeData);
         </div>
 
         <div className="nx-card">
+          <p>Incidents</p>
+          <h2 className={incidents.length > 0 ? "yellow" : "green"}>
+            {incidents.length}
+          </h2>
+        </div>
+
+        <div className="nx-card">
           <p>Last Updated</p>
           <h2 className="cyan">{lastUpdated || "Checking..."}</h2>
         </div>
@@ -240,7 +245,8 @@ setUptime(uptimeData);
           <div>
             <h2>Alert Center</h2>
             <p className="nx-muted">
-              Live operational warnings generated from service health and response time.
+              Live operational warnings generated from service health and
+              response time.
             </p>
           </div>
 
@@ -351,7 +357,8 @@ setUptime(uptimeData);
           <div>
             <h2>Live Event Timeline</h2>
             <p className="nx-muted">
-              Recent health check activity across NexusOps services with severity labels.
+              Recent health check activity across NexusOps services with severity
+              labels.
             </p>
           </div>
 
@@ -398,6 +405,92 @@ setUptime(uptimeData);
                 <span>{item.time}</span>
               </div>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="nx-panel" style={{ marginTop: "24px" }}>
+        <div className="nx-panel-head">
+          <div>
+            <h2>Incident History</h2>
+            <p className="nx-muted">
+              High-latency and offline incidents detected by NexusOps monitoring.
+            </p>
+          </div>
+
+          <div className="nx-pill neutral">{incidents.length} incidents</div>
+        </div>
+
+        <div className="nx-feed">
+          {incidents.length === 0 && (
+            <article className="nx-event live">
+              <div className="nx-event-top">
+                <div>
+                  <strong>NO_ACTIVE_INCIDENTS</strong>
+                  <p className="nx-muted">
+                    No warning or critical monitoring incidents detected.
+                  </p>
+                </div>
+                <span>Clean</span>
+              </div>
+            </article>
+          )}
+
+          {incidents.map((incident) => (
+            <article
+              key={incident.id}
+              className={`nx-event ${
+                incident.type === "Critical"
+                  ? "danger"
+                  : incident.type === "Warning"
+                  ? "warning"
+                  : "live"
+              }`}
+            >
+              <div className="nx-event-top">
+                <div>
+                  <strong>
+                    {incident.type.toUpperCase()} • {incident.service}
+                  </strong>
+                  <p className="nx-muted">
+                    {incident.message} • {incident.latency} ms
+                  </p>
+                </div>
+
+                <span>{incident.time}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="nx-panel" style={{ marginTop: "24px" }}>
+        <div className="nx-panel-head">
+          <div>
+            <h2>Service Uptime</h2>
+            <p className="nx-muted">
+              Current uptime percentage based on the latest monitoring cycle.
+            </p>
+          </div>
+        </div>
+
+        <div className="nx-grid">
+          {Object.entries(uptime).map(([service, value]) => (
+            <div className="nx-card" key={service}>
+              <h3>{service}</h3>
+
+              <h2
+                style={{
+                  color: value === 100 ? "#22c55e" : "#ef4444",
+                }}
+              >
+                {value.toFixed(1)}%
+              </h2>
+
+              <p className="nx-muted">
+                {value === 100 ? "Operational" : "Unavailable"}
+              </p>
+            </div>
           ))}
         </div>
       </section>
