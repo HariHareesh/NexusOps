@@ -5,6 +5,8 @@ import NexusShell from "../../../components/NexusShell";
 import {
   BarChart,
   Bar,
+  CartesianGrid,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -46,6 +48,20 @@ const initialServices: HealthService[] = [
   { name: "CI/CD", endpoint: "/api/cicd/health", status: "Checking", latency: 0 },
   { name: "Data Nexus", endpoint: "/api/datanexus/health", status: "Checking", latency: 0 },
 ];
+
+const chartTooltipStyle = {
+  background: "rgba(2, 6, 23, 0.96)",
+  border: "1px solid rgba(103, 232, 249, 0.22)",
+  borderRadius: "12px",
+  color: "#e2e8f0",
+  boxShadow: "0 18px 42px rgba(0, 0, 0, 0.32)",
+};
+
+const chartAxisStyle = {
+  fill: "#94a3b8",
+  fontSize: 12,
+  fontWeight: 700,
+};
 
 export default function MonitoringPage() {
   const [services, setServices] = useState<HealthService[]>(initialServices);
@@ -179,8 +195,8 @@ export default function MonitoringPage() {
   }));
 
   const statusChartData = [
-    { name: "Healthy", value: healthyServices },
-    { name: "Offline", value: offlineServices.length },
+    { name: "Healthy", value: healthyServices, fill: "#34d399" },
+    { name: "Offline", value: offlineServices.length, fill: "#fb7185" },
   ];
   const copyMonitoringReport = async () => {
   const report = `
@@ -220,343 +236,362 @@ ${
 
   return (
     <NexusShell>
-      <div className="nx-header">
-        <div>
-          <p className="nx-kicker">PHASE 8.9</p>
-          <h2 className="nx-heading">Live Monitoring Dashboard</h2>
-          <p className="nx-muted">
-            Auto-refreshing health, uptime, alerts, incidents, charts, and live
-            event timeline across NexusOps services.
-          </p>
-          <p className="nx-muted" style={{ marginTop: "8px" }}>
-            Auto Refresh: Every 15 seconds ·{" "}
-            {isChecking ? "Checking services..." : "Monitoring active"}
-          </p>
-        </div>
-
-        <div className="nx-header-actions">
-          <button className="nx-pill success" onClick={checkServices}>
-            Refresh Now
-          </button>
-          <button className="nx-pill neutral" onClick={copyMonitoringReport}>
-  Copy Report
-</button>
-          <div className="nx-pill neutral">
-            {isChecking ? "Checking..." : "Live"}
-          </div>
-        </div>
-      </div>
-
-      <section className="nx-grid">
-        <div className="nx-card">
-          <p>Overall Health</p>
-          <h2 className="green">{overallHealth}%</h2>
-        </div>
-
-        <div className="nx-card">
-          <p>Healthy Services</p>
-          <h2 className="cyan">
-            {healthyServices}/{totalServices}
-          </h2>
-        </div>
-
-        <div className="nx-card">
-          <p>Average Response Time</p>
-          <h2 className="yellow">{averageLatency} ms</h2>
-        </div>
-
-        <div className="nx-card">
-          <p>Incidents</p>
-          <h2 className={incidents.length > 0 ? "yellow" : "green"}>
-            {incidents.length}
-          </h2>
-        </div>
-
-        <div className="nx-card">
-          <p>Last Updated</p>
-          <h2 className="cyan">{lastUpdated || "Checking..."}</h2>
-        </div>
-      </section>
-
-      <section className="nx-panel" style={{ marginTop: "24px" }}>
-        <div className="nx-panel-head">
+      <div className="nx-monitoring-page">
+        <div className="nx-header nx-monitoring-header">
           <div>
-            <h2>Alert Center</h2>
-            <p className="nx-muted">
-              Live operational warnings generated from service health and
-              response time.
+            <p className="nx-kicker">PHASE 8.9</p>
+            <h2 className="nx-heading">Live Monitoring Dashboard</h2>
+            <p className="nx-muted nx-monitoring-lede">
+              Auto-refreshing health, uptime, alerts, incidents, charts, and live
+              event timeline across NexusOps services.
             </p>
+            <div className="nx-monitoring-statusline">
+              <span className={`nx-monitoring-dot ${isChecking ? "checking" : "live"}`} />
+              <span>Auto Refresh: Every 15 seconds</span>
+              <span>{isChecking ? "Checking services..." : "Monitoring active"}</span>
+            </div>
           </div>
 
-          <div
-            className={`nx-pill ${
-              alertLevel === "Healthy"
-                ? "success"
-                : alertLevel === "Warning"
-                ? "neutral"
-                : "danger"
-            }`}
-          >
-            {alertLevel}
+          <div className="nx-header-actions nx-monitoring-actions">
+            <button className="nx-pill nx-monitoring-action success" onClick={checkServices}>
+              Refresh Now
+            </button>
+            <button className="nx-pill nx-monitoring-action neutral" onClick={copyMonitoringReport}>
+              Copy Report
+            </button>
+            <div className="nx-pill nx-monitoring-live-pill neutral">
+              <span className={`nx-monitoring-dot ${isChecking ? "checking" : "live"}`} />
+              {isChecking ? "Checking" : "Live"}
+            </div>
           </div>
         </div>
 
-        <div className="nx-feed">
-          {offlineServices.length === 0 && slowServices.length === 0 && (
-            <article className="nx-event live">
-              <div className="nx-event-top">
-                <div>
-                  <strong>ALL_SERVICES_HEALTHY</strong>
-                  <p className="nx-muted">
-                    No offline services or high latency warnings detected.
-                  </p>
-                </div>
-                <span>OK</span>
-              </div>
-            </article>
-          )}
+        <section className="nx-grid nx-monitoring-metrics" aria-label="Monitoring summary">
+          <div className="nx-card nx-monitoring-metric-card">
+            <p>Overall Health</p>
+            <h2 className="green">{overallHealth}%</h2>
+            <span>Fleet availability</span>
+          </div>
 
-          {offlineServices.map((service) => (
-            <article className="nx-event danger" key={`offline-${service.name}`}>
-              <div className="nx-event-top">
-                <div>
-                  <strong>{service.name.toUpperCase()}_OFFLINE</strong>
-                  <p className="nx-muted">
-                    {service.name} is unreachable from the monitoring dashboard.
-                  </p>
-                </div>
-                <span>Critical</span>
-              </div>
-            </article>
-          ))}
+          <div className="nx-card nx-monitoring-metric-card">
+            <p>Healthy Services</p>
+            <h2 className="cyan">
+              {healthyServices}/{totalServices}
+            </h2>
+            <span>Passing latest check</span>
+          </div>
 
-          {slowServices.map((service) => (
-            <article className="nx-event warning" key={`slow-${service.name}`}>
-              <div className="nx-event-top">
-                <div>
-                  <strong>{service.name.toUpperCase()}_HIGH_LATENCY</strong>
-                  <p className="nx-muted">
-                    {service.name} response time is {service.latency} ms.
-                  </p>
-                </div>
-                <span>Warning</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+          <div className="nx-card nx-monitoring-metric-card">
+            <p>Average Response Time</p>
+            <h2 className="yellow">{averageLatency} ms</h2>
+            <span>Across monitored endpoints</span>
+          </div>
 
-      <section className="nx-content-grid" style={{ marginTop: "24px" }}>
-        <div className="nx-panel">
-          <div className="nx-panel-head">
+          <div className="nx-card nx-monitoring-metric-card">
+            <p>Incidents</p>
+            <h2 className={incidents.length > 0 ? "yellow" : "green"}>
+              {incidents.length}
+            </h2>
+            <span>Retained in session</span>
+          </div>
+
+          <div className="nx-card nx-monitoring-metric-card">
+            <p>Last Updated</p>
+            <h2 className="cyan nx-monitoring-time">{lastUpdated || "Checking..."}</h2>
+            <span>Latest probe cycle</span>
+          </div>
+        </section>
+
+        <section className="nx-panel nx-monitoring-panel nx-alert-panel">
+          <div className="nx-panel-head nx-monitoring-panel-head">
             <div>
-              <h2>Response Time Bar Chart</h2>
+              <h2>Alert Center</h2>
               <p className="nx-muted">
-                Service-level response time from latest health check.
+                Live operational warnings generated from service health and
+                response time.
+              </p>
+            </div>
+
+            <div
+              className={`nx-pill nx-monitoring-severity-pill ${
+                alertLevel === "Healthy"
+                  ? "success"
+                  : alertLevel === "Warning"
+                  ? "warning"
+                  : "danger"
+              }`}
+            >
+              {alertLevel}
+            </div>
+          </div>
+
+          <div className="nx-feed nx-monitoring-feed compact">
+            {offlineServices.length === 0 && slowServices.length === 0 && (
+              <article className="nx-event nx-monitoring-event live">
+                <div className="nx-event-top">
+                  <div>
+                    <strong>ALL_SERVICES_HEALTHY</strong>
+                    <p className="nx-muted">
+                      No offline services or high latency warnings detected.
+                    </p>
+                  </div>
+                  <span>OK</span>
+                </div>
+              </article>
+            )}
+
+            {offlineServices.map((service) => (
+              <article className="nx-event nx-monitoring-event danger" key={`offline-${service.name}`}>
+                <div className="nx-event-top">
+                  <div>
+                    <strong>{service.name.toUpperCase()}_OFFLINE</strong>
+                    <p className="nx-muted">
+                      {service.name} is unreachable from the monitoring dashboard.
+                    </p>
+                  </div>
+                  <span>Critical</span>
+                </div>
+              </article>
+            ))}
+
+            {slowServices.map((service) => (
+              <article className="nx-event nx-monitoring-event warning" key={`slow-${service.name}`}>
+                <div className="nx-event-top">
+                  <div>
+                    <strong>{service.name.toUpperCase()}_HIGH_LATENCY</strong>
+                    <p className="nx-muted">
+                      {service.name} response time is {service.latency} ms.
+                    </p>
+                  </div>
+                  <span>Warning</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="nx-content-grid nx-monitoring-chart-grid">
+          <div className="nx-panel nx-monitoring-panel nx-monitoring-chart-panel">
+            <div className="nx-panel-head nx-monitoring-panel-head">
+              <div>
+                <h2>Response Time Bar Chart</h2>
+                <p className="nx-muted">
+                  Service-level response time from latest health check.
+                </p>
+              </div>
+            </div>
+
+            <div className="nx-monitoring-chart-frame">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={latencyChartData} margin={{ top: 18, right: 16, left: -8, bottom: 18 }}>
+                  <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" vertical={false} />
+                  <XAxis dataKey="name" tick={chartAxisStyle} axisLine={false} tickLine={false} interval={0} angle={-18} textAnchor="end" height={62} />
+                  <YAxis tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: "rgba(34, 211, 238, 0.08)" }} />
+                  <Bar dataKey="latency" fill="#22d3ee" radius={[8, 8, 4, 4]} maxBarSize={42} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="nx-panel nx-monitoring-panel nx-monitoring-chart-panel">
+            <div className="nx-panel-head nx-monitoring-panel-head">
+              <div>
+                <h2>Health Status Summary</h2>
+                <p className="nx-muted">Healthy versus offline service count.</p>
+              </div>
+            </div>
+
+            <div className="nx-monitoring-chart-frame compact">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={statusChartData} margin={{ top: 18, right: 14, left: -12, bottom: 8 }}>
+                  <CartesianGrid stroke="rgba(148, 163, 184, 0.12)" vertical={false} />
+                  <XAxis dataKey="name" tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={chartAxisStyle} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} cursor={{ fill: "rgba(34, 211, 238, 0.08)" }} />
+                  <Bar dataKey="value" radius={[8, 8, 4, 4]} maxBarSize={58}>
+                    {statusChartData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </section>
+
+        <section className="nx-panel nx-monitoring-panel">
+          <div className="nx-panel-head nx-monitoring-panel-head">
+            <div>
+              <h2>Live Event Timeline</h2>
+              <p className="nx-muted">
+                Recent health check activity across NexusOps services with severity
+                labels.
+              </p>
+            </div>
+
+            <div className="nx-pill neutral">{history.length} records</div>
+          </div>
+
+          <div className="nx-feed nx-monitoring-feed scrollable">
+            {history.length === 0 && (
+              <article className="nx-event nx-monitoring-event live">
+                <div className="nx-event-top">
+                  <div>
+                    <strong>WAITING_FOR_HEALTH_CHECKS</strong>
+                    <p className="nx-muted">
+                      Monitoring records will appear after the first refresh cycle.
+                    </p>
+                  </div>
+                  <span>Pending</span>
+                </div>
+              </article>
+            )}
+
+            {history.map((item) => (
+              <article
+                key={item.id}
+                className={`nx-event nx-monitoring-event ${
+                  item.event === "Critical"
+                    ? "danger"
+                    : item.event === "Warning"
+                    ? "warning"
+                    : "live"
+                }`}
+              >
+                <div className="nx-event-top">
+                  <div>
+                    <strong>
+                      {item.event.toUpperCase()} / {item.service}
+                    </strong>
+
+                    <p className="nx-muted">
+                      {item.status} / {item.latency} ms
+                    </p>
+                  </div>
+
+                  <span>{item.time}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="nx-panel nx-monitoring-panel">
+          <div className="nx-panel-head nx-monitoring-panel-head">
+            <div>
+              <h2>Incident History</h2>
+              <p className="nx-muted">
+                High-latency and offline incidents detected by NexusOps monitoring.
+              </p>
+            </div>
+
+            <div className="nx-pill neutral">{incidents.length} incidents</div>
+          </div>
+
+          <div className="nx-feed nx-monitoring-feed scrollable compact-scroll">
+            {incidents.length === 0 && (
+              <article className="nx-event nx-monitoring-event live">
+                <div className="nx-event-top">
+                  <div>
+                    <strong>NO_ACTIVE_INCIDENTS</strong>
+                    <p className="nx-muted">
+                      No warning or critical monitoring incidents detected.
+                    </p>
+                  </div>
+                  <span>Clean</span>
+                </div>
+              </article>
+            )}
+
+            {incidents.map((incident) => (
+              <article
+                key={incident.id}
+                className={`nx-event nx-monitoring-event ${
+                  incident.type === "Critical"
+                    ? "danger"
+                    : incident.type === "Warning"
+                    ? "warning"
+                    : "live"
+                }`}
+              >
+                <div className="nx-event-top">
+                  <div>
+                    <strong>
+                      {incident.type.toUpperCase()} / {incident.service}
+                    </strong>
+                    <p className="nx-muted">
+                      {incident.message} / {incident.latency} ms
+                    </p>
+                  </div>
+
+                  <span>{incident.time}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="nx-panel nx-monitoring-panel">
+          <div className="nx-panel-head nx-monitoring-panel-head">
+            <div>
+              <h2>Service Uptime</h2>
+              <p className="nx-muted">
+                Current uptime percentage based on the latest monitoring cycle.
               </p>
             </div>
           </div>
 
-          <div style={{ width: "100%", height: 320 }}>
-            <ResponsiveContainer>
-              <BarChart data={latencyChartData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="latency" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="nx-panel">
-          <div className="nx-panel-head">
-            <div>
-              <h2>Health Status Summary</h2>
-              <p className="nx-muted">Healthy versus offline service count.</p>
-            </div>
-          </div>
-
-          <div style={{ width: "100%", height: 320 }}>
-            <ResponsiveContainer>
-              <BarChart data={statusChartData}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </section>
-
-      <section className="nx-panel" style={{ marginTop: "24px" }}>
-        <div className="nx-panel-head">
-          <div>
-            <h2>Live Event Timeline</h2>
-            <p className="nx-muted">
-              Recent health check activity across NexusOps services with severity
-              labels.
-            </p>
-          </div>
-
-          <div className="nx-pill neutral">{history.length} records</div>
-        </div>
-
-        <div className="nx-feed">
-          {history.length === 0 && (
-            <article className="nx-event live">
-              <div className="nx-event-top">
-                <div>
-                  <strong>WAITING_FOR_HEALTH_CHECKS</strong>
-                  <p className="nx-muted">
-                    Monitoring records will appear after the first refresh cycle.
-                  </p>
+          <div className="nx-grid nx-monitoring-uptime-grid">
+            {Object.entries(uptime).map(([service, value]) => (
+              <div className="nx-card nx-monitoring-service-card" key={service}>
+                <div className={`nx-monitoring-status-chip ${value === 100 ? "healthy" : "offline"}`}>
+                  {value === 100 ? "Operational" : "Unavailable"}
                 </div>
-                <span>Pending</span>
+                <h3>{service}</h3>
+
+                <h2
+                  style={{
+                    color: value === 100 ? "#22c55e" : "#ef4444",
+                  }}
+                >
+                  {value.toFixed(1)}%
+                </h2>
+
+                <p className="nx-muted">
+                  {value === 100 ? "Latest probe passed" : "Latest probe failed"}
+                </p>
               </div>
-            </article>
-          )}
-
-          {history.map((item) => (
-            <article
-              key={item.id}
-              className={`nx-event ${
-                item.event === "Critical"
-                  ? "danger"
-                  : item.event === "Warning"
-                  ? "warning"
-                  : "live"
-              }`}
-            >
-              <div className="nx-event-top">
-                <div>
-                  <strong>
-                    {item.event.toUpperCase()} • {item.service}
-                  </strong>
-
-                  <p className="nx-muted">
-                    {item.status} • {item.latency} ms
-                  </p>
-                </div>
-
-                <span>{item.time}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="nx-panel" style={{ marginTop: "24px" }}>
-        <div className="nx-panel-head">
-          <div>
-            <h2>Incident History</h2>
-            <p className="nx-muted">
-              High-latency and offline incidents detected by NexusOps monitoring.
-            </p>
+            ))}
           </div>
+        </section>
 
-          <div className="nx-pill neutral">{incidents.length} incidents</div>
-        </div>
-
-        <div className="nx-feed">
-          {incidents.length === 0 && (
-            <article className="nx-event live">
-              <div className="nx-event-top">
-                <div>
-                  <strong>NO_ACTIVE_INCIDENTS</strong>
-                  <p className="nx-muted">
-                    No warning or critical monitoring incidents detected.
-                  </p>
-                </div>
-                <span>Clean</span>
+        <section className="nx-grid nx-monitoring-service-grid" aria-label="Health matrix">
+          {services.map((service) => (
+            <div className={`nx-card nx-monitoring-health-card ${service.status.toLowerCase()}`} key={service.name}>
+              <div className={`nx-monitoring-status-chip ${service.status.toLowerCase()}`}>
+                {service.status}
               </div>
-            </article>
-          )}
-
-          {incidents.map((incident) => (
-            <article
-              key={incident.id}
-              className={`nx-event ${
-                incident.type === "Critical"
-                  ? "danger"
-                  : incident.type === "Warning"
-                  ? "warning"
-                  : "live"
-              }`}
-            >
-              <div className="nx-event-top">
-                <div>
-                  <strong>
-                    {incident.type.toUpperCase()} • {incident.service}
-                  </strong>
-                  <p className="nx-muted">
-                    {incident.message} • {incident.latency} ms
-                  </p>
-                </div>
-
-                <span>{incident.time}</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="nx-panel" style={{ marginTop: "24px" }}>
-        <div className="nx-panel-head">
-          <div>
-            <h2>Service Uptime</h2>
-            <p className="nx-muted">
-              Current uptime percentage based on the latest monitoring cycle.
-            </p>
-          </div>
-        </div>
-
-        <div className="nx-grid">
-          {Object.entries(uptime).map(([service, value]) => (
-            <div className="nx-card" key={service}>
-              <h3>{service}</h3>
+              <h3>{service.name}</h3>
 
               <h2
                 style={{
-                  color: value === 100 ? "#22c55e" : "#ef4444",
+                  color:
+                    service.status === "Healthy"
+                      ? "#22c55e"
+                      : service.status === "Checking"
+                      ? "#facc15"
+                      : "#ef4444",
                 }}
               >
-                {value.toFixed(1)}%
+                {service.latency} ms
               </h2>
 
-              <p className="nx-muted">
-                {value === 100 ? "Operational" : "Unavailable"}
-              </p>
+              <p className="nx-muted">Endpoint: {service.endpoint}</p>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="nx-grid">
-        {services.map((service) => (
-          <div className="nx-card" key={service.name}>
-            <h3>{service.name}</h3>
-
-            <h2
-              style={{
-                color:
-                  service.status === "Healthy"
-                    ? "#22c55e"
-                    : service.status === "Checking"
-                    ? "#facc15"
-                    : "#ef4444",
-              }}
-            >
-              {service.status}
-            </h2>
-
-            <p style={{ marginTop: "12px", color: "#94a3b8" }}>
-              Response Time: {service.latency} ms
-            </p>
-          </div>
-        ))}
-      </section>
+        </section>
+      </div>
     </NexusShell>
   );
 }

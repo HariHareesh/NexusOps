@@ -51,6 +51,7 @@ export default function NexusShell({ children }: { children: ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`nx-nav-item ${active ? "active" : ""}`}
+                aria-current={active ? "page" : undefined}
               >
                 <span>{item.label}</span>
                 <small>{item.meta}</small>
@@ -79,3 +80,5 @@ export default function NexusShell({ children }: { children: ReactNode }) {
     </main>
   );
 }
+
+
